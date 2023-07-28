@@ -54,7 +54,7 @@ block_size = 35
 local_thresh = threshold_local(frame, block_size, offset=10)
 binary_local = frame > local_thresh
 
-fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(20,60))
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
 ax = axes.ravel()
 plt.gray()
 
