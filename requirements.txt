@@ -1,0 +1,6 @@
+imageio
+jupyterlab
+jupytext
+matplotlib
+numpy
+scikit-image
