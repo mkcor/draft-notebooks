@@ -10,7 +10,7 @@ import imageio.v3 as iio
 from skimage.filters import (
     threshold_local,
     threshold_otsu,
-    threshold_multiotsu
+    threshold_multiotsu,
     try_all_threshold
 )
 
