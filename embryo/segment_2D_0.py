@@ -11,8 +11,11 @@ from skimage.filters import (
     threshold_local,
     threshold_otsu,
     threshold_multiotsu,
-    try_all_threshold
+    try_all_threshold,
+    sobel
 )
+from skimage.exposure import histogram, equalize_hist
+from skimage import segmentation, morphology
 
 # %% [markdown]
 # We are looking at the XY projection of frame 184 for Embryo 2.
@@ -111,3 +114,23 @@ plot_comparison(mask_1, mask_2, "block_size = 25", "block_size = 35")
 thresholds = threshold_multiotsu(frame, classes=3)
 regions = np.digitize(frame, bins=thresholds)
 plot_comparison(frame, regions, "Original", "Multi-Otsu thresholding")
+
+# %%
+# Plot image histogram
+fig, ax = plt.subplots(ncols=1)
+
+ax.hist(frame.ravel(), bins=25)
+ax.set_title('Histogram')
+
+# %%
+# Enhance contrast by equalizing histogram
+enhanced_image = equalize_hist(frame)
+plt.imshow(enhanced_image, cmap='gray')
+
+# %%
+# Apply gradient magnitude using Sobel filter
+gradient = sobel(enhanced_image)
+# Apply a marker-based watershed algorithm
+markers = morphology.label(enhanced_image < 0.4 * enhanced_image.max())
+segmented = segmentation.watershed(gradient, markers)
+plt.imshow(segmented, cmap='gray')
