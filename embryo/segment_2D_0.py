@@ -2,18 +2,11 @@
 # # Threshold one frame (XY projection)
 
 # %%
-import numpy as np
 import matplotlib.pyplot as plt
-import imageio.v3 as iio
+import numpy as np
 
 # %%
-from skimage.filters import (
-    threshold_local,
-    threshold_otsu,
-    threshold_multiotsu,
-    try_all_threshold
-)
-
+import skimage as ski
 # %% [markdown]
 # We are looking at the XY projection of frame 184 for Embryo 2.
 #
@@ -38,23 +31,23 @@ plt.show()
 # Contouring does not reveal as many details
 
 # %%
-# Try various global thresholding techniques
-fig, ax = try_all_threshold(frame, figsize=(10, 10), verbose=False)
+# Try all global thresholding techniques
+fig, ax = ski.filters.try_all_threshold(frame, figsize=(10, 10), verbose=False)
 plt.show()
 
 # %% [markdown]
 # Isodata and Otsu seem to give the best results.
 
 # %%
-# Global thresholding v/s Local thresholding
-global_thresh = threshold_otsu(frame)
+# Global thresholding v/s Local thresholding 
+global_thresh = ski.filters.threshold_otsu(frame)
 binary_global = frame > global_thresh
 
 block_size = 35
-local_thresh = threshold_local(frame, block_size, offset=10)
+local_thresh = ski.filters.threshold_local(frame, block_size, offset=10)
 binary_local = frame > local_thresh
 
-fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(20,60))
 ax = axes.ravel()
 plt.gray()
 
@@ -91,23 +84,42 @@ def plot_comparison(plot1, plot2, title1, title2):
 
 # %%
 # Deep dive into local thresholding:
-local_thresh_1 = threshold_local(frame, block_size=35, offset=10)
+local_thresh_1 = ski.filters.threshold_local(frame, block_size=35, offset=10)
 mask_1 = frame > local_thresh_1
-local_thresh_2 = threshold_local(frame, block_size=35)
+local_thresh_2 = ski.filters.threshold_local(frame, block_size=35)
 mask_2 = frame > local_thresh_2
 plot_comparison(mask_1, mask_2, "Offset = 10", "Without Offset")
 # Increasing the offset value yields more details of the image
 
 # %%
-local_thresh_1 = threshold_local(frame, block_size=25, offset=10)
+local_thresh_1 = ski.filters.threshold_local(frame, block_size=25, offset=10)
 mask_1 = frame > local_thresh_1
-local_thresh_2 = threshold_local(frame, block_size=35, offset=10)
+local_thresh_2 = ski.filters.threshold_local(frame, block_size=35, offset=10)
 mask_2 = frame > local_thresh_2
 plot_comparison(mask_1, mask_2, "block_size = 25", "block_size = 35")
 # The nuclei are more defined when block_size is set to a higher value
 
 # %%
 # Try Multi-Otsu thresholding
-thresholds = threshold_multiotsu(frame, classes=3)
+thresholds = ski.filters.threshold_multiotsu(frame, classes=3)
 regions = np.digitize(frame, bins=thresholds)
 plot_comparison(frame, regions, "Original", "Multi-Otsu thresholding")
+
+# %%
+# Plot image histogram
+fig, ax = plt.subplots(ncols=1)
+
+ax.hist(frame.ravel(), bins=25)
+ax.set_title('Histogram')
+
+# %%
+# Enhance contrast by equalizing histogram
+enhanced_image = ski.exposure.equalize_hist(frame)
+plt.imshow(enhanced_image, cmap='gray')
+
+# %%
+# Apply gradient magnitude using Sobel filter
+gradient = ski.filters.sobel(enhanced_image)
+# Apply a watershed segmentation
+segmented = ski.segmentation.watershed(gradient)
+plt.imshow(segmented, cmap='gray')
